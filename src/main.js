@@ -131,7 +131,7 @@ function renderProviderPanel(provider) {
           <p class="eyebrow">API Extension</p>
           <h2>OpenAI Compatible 接入预留</h2>
         </div>
-        <p class="section-copy">现在已经把 API 接入层独立出来了。你后续可以接 OpenAI、OpenRouter、硅基流动、One API 或任何兼容 `/chat/completions` 的服务。</p>
+        <p class="section-copy">现在已经把 API 接入层独立出来了。你后续可以接 OpenAI、OpenRouter、硅基流动、One API 或任何兼容 <code>/chat/completions</code> 的服务。</p>
       </div>
       <div class="two-col">
         <form id="provider-form" class="form-card">
