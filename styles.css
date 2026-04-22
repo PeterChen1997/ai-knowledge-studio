@@ -217,7 +217,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border-radius: 14px;
   border: 1px solid var(--line);
@@ -305,6 +306,17 @@ button:hover:not([disabled]) {
   border-radius: 16px;
   padding: 12px 14px;
   border: 1px solid rgba(255,255,255,.05);
+}
+
+.mini-tags {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.source-form {
+  gap: 10px;
 }
 
 pre {

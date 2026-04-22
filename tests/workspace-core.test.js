@@ -5,6 +5,11 @@ import {
   createDraftVersion,
   rankTopicCards,
   migrateLegacyState,
+  updateTopicCard,
+  updateProjectRecord,
+  updateBriefRecord,
+  updateSourceRecord,
+  removeSourceRecord,
 } from '../src/workspace-core.js';
 
 describe('rankTopicCards', () => {
@@ -66,6 +71,106 @@ describe('createDraftVersion', () => {
 
     expect(first.version).toBe(1);
     expect(second.version).toBe(2);
+  });
+});
+
+describe('workspace record updates', () => {
+  test('updates topic metadata with normalized tag and platform lists', () => {
+    const updated = updateTopicCard({
+      id: 'topic-1',
+      title: '旧题目',
+      problem: '旧问题',
+      searchDemand: 3,
+      authorityGap: 3,
+      shareability: 3,
+      competition: 3,
+      tags: [],
+      platformSuggestions: [],
+      status: 'inbox',
+      createdAt: '2026-04-22T00:00:00.000Z',
+    }, {
+      title: '新的题目',
+      tagsText: '睡眠, 健康\n效率',
+      platformSuggestionsText: '小红书\n公众号',
+      status: 'scored',
+      searchDemand: '5',
+    });
+
+    expect(updated.title).toBe('新的题目');
+    expect(updated.status).toBe('scored');
+    expect(updated.searchDemand).toBe(5);
+    expect(updated.tags).toEqual(['睡眠', '健康', '效率']);
+    expect(updated.platformSuggestions).toEqual(['小红书', '公众号']);
+  });
+
+  test('updates project status and due date while refreshing updatedAt', () => {
+    const updated = updateProjectRecord({
+      id: 'project-1',
+      topicId: 'topic-1',
+      title: '项目',
+      audience: '白领',
+      platform: '小红书',
+      objective: '图文',
+      tone: '克制',
+      status: 'brief',
+      dueDate: '',
+      createdAt: '2026-04-22T00:00:00.000Z',
+      updatedAt: '2026-04-22T00:00:00.000Z',
+    }, {
+      status: 'drafting',
+      dueDate: '2026-05-01',
+    });
+
+    expect(updated.status).toBe('drafting');
+    expect(updated.dueDate).toBe('2026-05-01');
+    expect(updated.updatedAt).not.toBe('2026-04-22T00:00:00.000Z');
+  });
+
+  test('updates brief lists from textarea-like text input', () => {
+    const updated = updateBriefRecord({
+      projectId: 'project-1',
+      coreMessage: '旧观点',
+      userValue: '旧收益',
+      angle: '旧角度',
+      outline: ['旧结构'],
+      guardrails: ['旧约束'],
+      sourceCount: 2,
+    }, {
+      outlineText: '问题定义\n关键事实\n行动建议',
+      guardrailsText: '标注来源\n避免绝对化',
+      sourceCount: '4',
+    });
+
+    expect(updated.outline).toEqual(['问题定义', '关键事实', '行动建议']);
+    expect(updated.guardrails).toEqual(['标注来源', '避免绝对化']);
+    expect(updated.sourceCount).toBe(4);
+  });
+
+  test('updates and removes source records', () => {
+    const updated = updateSourceRecord({
+      id: 'source-1',
+      projectId: 'project-1',
+      title: '旧资料',
+      url: '',
+      excerpt: '',
+      evidenceLevel: 'medium',
+      tags: [],
+    }, {
+      title: '新资料',
+      url: 'https://example.com',
+      excerpt: '关键信息',
+      evidenceLevel: 'high',
+      tagsText: '研究, 数据',
+    });
+
+    const remaining = removeSourceRecord([
+      updated,
+      { id: 'source-2', projectId: 'project-1', title: 'B', url: '', excerpt: '', evidenceLevel: 'low', tags: [] },
+    ], 'source-1');
+
+    expect(updated.tags).toEqual(['研究', '数据']);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).toBe('source-2');
   });
 });
 

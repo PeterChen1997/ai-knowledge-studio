@@ -16,6 +16,11 @@ import {
   createTemplate,
   createTopicCard,
   rankTopicCards,
+  updateBriefRecord,
+  updateProjectRecord,
+  updateSourceRecord,
+  updateTopicCard,
+  removeSourceRecord,
 } from './workspace-core.js';
 
 const state = loadState();
@@ -210,7 +215,6 @@ function renderDashboard() {
     </section>
   `;
 }
-
 function renderTopics() {
   const rankedTopics = getRankedTopics();
   const activeTopic = getActiveTopic();
@@ -232,26 +236,36 @@ function renderTopics() {
               <div>
                 <strong>${escapeHtml(topic.title)}</strong>
                 <p class="muted">${escapeHtml(topic.problem)}</p>
+                <p class="mini-tags">${topic.tags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</p>
               </div>
-              <span>分数 ${topic.score}</span>
+              <span>${escapeHtml(topic.status)} · ${topic.score}</span>
             </button>
           `).join('')}
         </div>
-        <div class="form-card form-stack">
+        <form class="form-card form-stack" id="topic-form">
           ${activeTopic ? `
-            <label>题目<input name="title" data-topic-input="title" value="${escapeHtml(activeTopic.title)}" /></label>
-            <label>为什么值得做<input name="problem" data-topic-input="problem" value="${escapeHtml(activeTopic.problem)}" /></label>
+            <input type="hidden" name="topicId" value="${activeTopic.id}" />
+            <label>题目<input name="title" value="${escapeHtml(activeTopic.title)}" /></label>
+            <label>为什么值得做<input name="problem" value="${escapeHtml(activeTopic.problem)}" /></label>
             <div class="metric-grid">
-              <label>搜索需求<input type="number" min="1" max="5" data-topic-input="searchDemand" value="${activeTopic.searchDemand}" /></label>
-              <label>权威缺口<input type="number" min="1" max="5" data-topic-input="authorityGap" value="${activeTopic.authorityGap}" /></label>
-              <label>分享性<input type="number" min="1" max="5" data-topic-input="shareability" value="${activeTopic.shareability}" /></label>
-              <label>竞争度<input type="number" min="1" max="5" data-topic-input="competition" value="${activeTopic.competition}" /></label>
+              <label>搜索需求<input type="number" min="1" max="5" name="searchDemand" value="${activeTopic.searchDemand}" /></label>
+              <label>权威缺口<input type="number" min="1" max="5" name="authorityGap" value="${activeTopic.authorityGap}" /></label>
+              <label>分享性<input type="number" min="1" max="5" name="shareability" value="${activeTopic.shareability}" /></label>
+              <label>竞争度<input type="number" min="1" max="5" name="competition" value="${activeTopic.competition}" /></label>
             </div>
+            <label>状态
+              <select name="status">
+                ${['inbox', 'scored', 'selected', 'archived'].map((status) => `<option value="${status}" ${activeTopic.status === status ? 'selected' : ''}>${status}</option>`).join('')}
+              </select>
+            </label>
+            <label>标签（逗号或换行分隔）<textarea name="tagsText">${escapeHtml(activeTopic.tags.join('\n'))}</textarea></label>
+            <label>平台建议（逗号或换行分隔）<textarea name="platformSuggestionsText">${escapeHtml(activeTopic.platformSuggestions.join('\n'))}</textarea></label>
             <div class="inline-actions">
+              <button type="submit">保存选题</button>
               <button type="button" data-action="create-project-from-topic" data-topic-id="${activeTopic.id}">从这个题创建项目</button>
             </div>
           ` : '<p class="muted">先选择一个题目。</p>'}
-        </div>
+        </form>
       </div>
     </section>
   `;
@@ -277,6 +291,7 @@ function renderProjects() {
               <div>
                 <strong>${escapeHtml(project.title)}</strong>
                 <p class="muted">${escapeHtml(project.platform)} · ${escapeHtml(project.objective)}</p>
+                <p class="mini-tags">截止：${escapeHtml(project.dueDate || '未设置')}</p>
               </div>
               <span>${escapeHtml(project.status)}</span>
             </button>
@@ -292,10 +307,19 @@ function renderProjects() {
                 <label>平台<input name="platform" value="${escapeHtml(activeProject.platform)}" /></label>
                 <label>目标产出<input name="objective" value="${escapeHtml(activeProject.objective)}" /></label>
                 <label>语气<input name="tone" value="${escapeHtml(activeProject.tone)}" /></label>
+                <label>状态
+                  <select name="status">
+                    ${['brief', 'sources', 'drafting', 'editing', 'ready', 'archived'].map((status) => `<option value="${status}" ${activeProject.status === status ? 'selected' : ''}>${status}</option>`).join('')}
+                  </select>
+                </label>
+                <label>截止日期<input type="date" name="dueDate" value="${escapeHtml(activeProject.dueDate || '')}" /></label>
               </div>
               <label>核心观点<textarea name="coreMessage">${escapeHtml(brief?.coreMessage || '')}</textarea></label>
               <label>用户收益<textarea name="userValue">${escapeHtml(brief?.userValue || '')}</textarea></label>
               <label>表达角度<input name="angle" value="${escapeHtml(brief?.angle || '')}" /></label>
+              <label>内容结构（换行分隔）<textarea name="outlineText">${escapeHtml((brief?.outline || []).join('\n'))}</textarea></label>
+              <label>Guardrails（换行分隔）<textarea name="guardrailsText">${escapeHtml((brief?.guardrails || []).join('\n'))}</textarea></label>
+              <label>目标来源数<input type="number" min="1" max="20" name="sourceCount" value="${brief?.sourceCount || 3}" /></label>
               <button type="submit">保存项目 brief</button>
             </form>
             <div class="result-card">
@@ -308,11 +332,22 @@ function renderProjects() {
               </div>
               <div class="stack-list compact-stack">
                 ${sources.map((source) => `
-                  <div class="source-card">
-                    <strong>${escapeHtml(source.title)}</strong>
-                    <p class="muted">${escapeHtml(source.excerpt || '补一句你为什么要保留这条资料')}</p>
-                    <span class="source-level">${escapeHtml(source.evidenceLevel)}</span>
-                  </div>
+                  <form class="source-card form-stack source-form" data-source-form="${source.id}">
+                    <input type="hidden" name="sourceId" value="${source.id}" />
+                    <label>标题<input name="title" value="${escapeHtml(source.title)}" /></label>
+                    <label>链接<input name="url" value="${escapeHtml(source.url || '')}" /></label>
+                    <label>摘录<textarea name="excerpt">${escapeHtml(source.excerpt || '')}</textarea></label>
+                    <label>可信度
+                      <select name="evidenceLevel">
+                        ${['low', 'medium', 'high'].map((level) => `<option value="${level}" ${source.evidenceLevel === level ? 'selected' : ''}>${level}</option>`).join('')}
+                      </select>
+                    </label>
+                    <label>标签（逗号或换行分隔）<textarea name="tagsText">${escapeHtml((source.tags || []).join('\n'))}</textarea></label>
+                    <div class="inline-actions">
+                      <button type="submit">保存资料</button>
+                      <button type="button" data-action="delete-source" data-source-id="${source.id}">删除</button>
+                    </div>
+                  </form>
                 `).join('')}
               </div>
             </div>
@@ -512,10 +547,10 @@ function render() {
   bindEvents();
 }
 
-function updateTopic(topicId, field, value) {
-  const topic = state.topics.find((item) => item.id === topicId);
-  if (!topic) return;
-  topic[field] = ['searchDemand', 'authorityGap', 'shareability', 'competition'].includes(field) ? Number(value) : value;
+function updateTopic(topicId, updates) {
+  const index = state.topics.findIndex((item) => item.id === topicId);
+  if (index < 0) return;
+  state.topics[index] = updateTopicCard(state.topics[index], updates);
   saveState(state);
   render();
 }
@@ -609,11 +644,14 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll('[data-topic-input]').forEach((input) => {
-    input.addEventListener('change', (event) => {
-      updateTopic(state.navigation.activeTopicId, event.target.dataset.topicInput, event.target.value);
+  const topicForm = document.querySelector('#topic-form');
+  if (topicForm) {
+    topicForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      updateTopic(String(form.get('topicId')), Object.fromEntries(form.entries()));
     });
-  });
+  }
 
   document.querySelectorAll('[data-action="select-project"]').forEach((button) => {
     button.addEventListener('click', () => selectProject(button.dataset.projectId));
@@ -687,28 +725,39 @@ function bindEvents() {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
       const projectId = String(form.get('projectId'));
-      const project = state.projects.find((item) => item.id === projectId);
-      if (!project) return;
+      const projectIndex = state.projects.findIndex((item) => item.id === projectId);
+      if (projectIndex < 0) return;
 
-      Object.assign(project, {
-        title: String(form.get('title')).trim(),
-        audience: String(form.get('audience')).trim(),
-        platform: String(form.get('platform')).trim(),
-        objective: String(form.get('objective')).trim(),
-        tone: String(form.get('tone')).trim(),
-        updatedAt: new Date().toISOString(),
-      });
-
-      const currentBrief = getBriefForProject(project.id) || createBrief(project, {});
-      currentBrief.coreMessage = String(form.get('coreMessage')).trim();
-      currentBrief.userValue = String(form.get('userValue')).trim();
-      currentBrief.angle = String(form.get('angle')).trim();
-      state.briefs = state.briefs.filter((item) => item.projectId !== project.id);
-      state.briefs.unshift(currentBrief);
+      state.projects[projectIndex] = updateProjectRecord(state.projects[projectIndex], Object.fromEntries(form.entries()));
+      const currentBrief = getBriefForProject(projectId) || createBrief(state.projects[projectIndex], {});
+      const nextBrief = updateBriefRecord(currentBrief, Object.fromEntries(form.entries()));
+      state.briefs = state.briefs.filter((item) => item.projectId !== projectId);
+      state.briefs.unshift(nextBrief);
       saveState(state);
       render();
     });
   }
+
+  document.querySelectorAll('[data-source-form]').forEach((formEl) => {
+    formEl.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const sourceId = String(form.get('sourceId'));
+      const sourceIndex = state.sources.findIndex((item) => item.id === sourceId);
+      if (sourceIndex < 0) return;
+      state.sources[sourceIndex] = updateSourceRecord(state.sources[sourceIndex], Object.fromEntries(form.entries()));
+      saveState(state);
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-source"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.sources = removeSourceRecord(state.sources, button.dataset.sourceId);
+      saveState(state);
+      render();
+    });
+  });
 
   document.querySelectorAll('[data-action="generate-draft"]').forEach((button) => {
     button.addEventListener('click', () => {

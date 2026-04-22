@@ -18,6 +18,23 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function normalizeText(value, fallback = '') {
+  const text = String(value ?? '').trim();
+  return text || fallback;
+}
+
+function normalizeNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+export function parseListText(value = '') {
+  return String(value)
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export function createId(prefix) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -96,7 +113,66 @@ export function createSource(projectId, source = {}) {
     url: source.url || '',
     excerpt: source.excerpt || '',
     evidenceLevel: source.evidenceLevel || 'medium',
+    tags: Array.isArray(source.tags) ? source.tags : [],
   };
+}
+
+export function updateTopicCard(topic, updates = {}) {
+  return {
+    ...topic,
+    title: normalizeText(updates.title ?? topic.title, topic.title),
+    problem: normalizeText(updates.problem ?? topic.problem, topic.problem),
+    searchDemand: normalizeNumber(updates.searchDemand ?? topic.searchDemand, topic.searchDemand),
+    authorityGap: normalizeNumber(updates.authorityGap ?? topic.authorityGap, topic.authorityGap),
+    shareability: normalizeNumber(updates.shareability ?? topic.shareability, topic.shareability),
+    competition: normalizeNumber(updates.competition ?? topic.competition, topic.competition),
+    tags: updates.tagsText !== undefined ? parseListText(updates.tagsText) : (updates.tags || topic.tags),
+    platformSuggestions: updates.platformSuggestionsText !== undefined
+      ? parseListText(updates.platformSuggestionsText)
+      : (updates.platformSuggestions || topic.platformSuggestions),
+    status: normalizeText(updates.status ?? topic.status, topic.status),
+  };
+}
+
+export function updateProjectRecord(project, updates = {}) {
+  return {
+    ...project,
+    title: normalizeText(updates.title ?? project.title, project.title),
+    audience: normalizeText(updates.audience ?? project.audience, project.audience),
+    platform: normalizeText(updates.platform ?? project.platform, project.platform),
+    objective: normalizeText(updates.objective ?? project.objective, project.objective),
+    tone: normalizeText(updates.tone ?? project.tone, project.tone),
+    status: normalizeText(updates.status ?? project.status, project.status),
+    dueDate: normalizeText(updates.dueDate ?? project.dueDate, ''),
+    updatedAt: nowIso(),
+  };
+}
+
+export function updateBriefRecord(brief, updates = {}) {
+  return {
+    ...brief,
+    coreMessage: normalizeText(updates.coreMessage ?? brief.coreMessage, brief.coreMessage),
+    userValue: normalizeText(updates.userValue ?? brief.userValue, brief.userValue),
+    angle: normalizeText(updates.angle ?? brief.angle, brief.angle),
+    outline: updates.outlineText !== undefined ? parseListText(updates.outlineText) : (updates.outline || brief.outline),
+    guardrails: updates.guardrailsText !== undefined ? parseListText(updates.guardrailsText) : (updates.guardrails || brief.guardrails),
+    sourceCount: normalizeNumber(updates.sourceCount ?? brief.sourceCount, brief.sourceCount),
+  };
+}
+
+export function updateSourceRecord(source, updates = {}) {
+  return {
+    ...source,
+    title: normalizeText(updates.title ?? source.title, source.title),
+    url: normalizeText(updates.url ?? source.url, ''),
+    excerpt: normalizeText(updates.excerpt ?? source.excerpt, ''),
+    evidenceLevel: normalizeText(updates.evidenceLevel ?? source.evidenceLevel, source.evidenceLevel),
+    tags: updates.tagsText !== undefined ? parseListText(updates.tagsText) : (updates.tags || source.tags || []),
+  };
+}
+
+export function removeSourceRecord(sources = [], sourceId) {
+  return sources.filter((source) => source.id !== sourceId);
 }
 
 export function createDraftVersion(existingDrafts = [], input = {}) {
