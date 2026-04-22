@@ -10,8 +10,18 @@
 ## 技术方案
 - 原生 ES Modules + Vite
 - `src/knowledge-core.js`：纯业务逻辑
+- `src/ai-provider.js`：OpenAI-compatible API 适配层
 - `src/store.js`：本地状态持久化
 - `src/main.js`：渲染和交互
+
+## API 扩展点
+当前已预留 OpenAI-compatible 接口层：
+- Provider config 标准字段：`baseUrl` / `apiKey` / `model` / `chatPath`
+- 请求协议：`POST {baseUrl}{chatPath}`
+- 响应解析：`choices[0].message.content`
+- 前端暂时直连，生产版应迁移为后端代理
+
+这意味着后续可以无痛接入 OpenAI、OpenRouter、硅基流动或自建兼容网关。
 
 ## 核心模块
 ### knowledge-core
@@ -20,6 +30,13 @@
 - `createKnowledgePack`
 - `scoreTopics`
 - `summarizePack`
+
+### ai-provider
+- `normalizeProviderConfig`
+- `createKnowledgeMessages`
+- `buildChatRequest`
+- `parseOpenAICompatibleResponse`
+- `generateKnowledgePackWithAPI`
 
 ## 测试策略
 先写 failing tests，再实现：

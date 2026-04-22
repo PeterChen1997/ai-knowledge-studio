@@ -6,6 +6,12 @@ import {
   scoreTopics,
   summarizePack,
 } from '../src/knowledge-core.js';
+import {
+  buildChatRequest,
+  createKnowledgeMessages,
+  normalizeProviderConfig,
+  parseOpenAICompatibleResponse,
+} from '../src/ai-provider.js';
 
 describe('generateHook', () => {
   test('matches xiaohongshu style goal with emotional hook', () => {
@@ -65,5 +71,59 @@ describe('summarizePack', () => {
     const brief = summarizePack(pack);
     expect(brief).toContain('总想晚睡的年轻人');
     expect(brief).toContain('短视频脚本');
+  });
+});
+
+describe('openai compatible provider config', () => {
+  test('normalizes provider config with defaults', () => {
+    const config = normalizeProviderConfig({
+      baseUrl: 'https://api.openai.com/',
+      apiKey: 'sk-demo',
+      model: 'gpt-4.1-mini',
+    });
+
+    expect(config.baseUrl).toBe('https://api.openai.com/v1');
+    expect(config.chatPath).toBe('/chat/completions');
+    expect(config.enabled).toBe(true);
+  });
+
+  test('marks provider disabled when required fields are missing', () => {
+    const config = normalizeProviderConfig({ baseUrl: '', apiKey: '', model: '' });
+    expect(config.enabled).toBe(false);
+  });
+});
+
+describe('openai compatible request builder', () => {
+  test('builds a chat completions payload for knowledge generation', () => {
+    const messages = createKnowledgeMessages({
+      topic: '久坐为什么让人越来越累',
+      audience: '办公室白领',
+      platform: '小红书',
+      objective: '图文卡片',
+      tone: '专业但不吓人',
+      sourceCount: 3,
+    });
+
+    const request = buildChatRequest(
+      normalizeProviderConfig({
+        baseUrl: 'https://api.openai.com/v1',
+        apiKey: 'sk-demo',
+        model: 'gpt-4.1-mini',
+      }),
+      messages,
+    );
+
+    expect(request.url).toBe('https://api.openai.com/v1/chat/completions');
+    expect(request.options.method).toBe('POST');
+    expect(request.body.model).toBe('gpt-4.1-mini');
+    expect(request.body.messages).toHaveLength(2);
+  });
+
+  test('parses standard openai compatible chat response content', () => {
+    const parsed = parseOpenAICompatibleResponse({
+      choices: [{ message: { content: '这是 AI 生成的结构化结果' } }],
+    });
+
+    expect(parsed).toBe('这是 AI 生成的结构化结果');
   });
 });

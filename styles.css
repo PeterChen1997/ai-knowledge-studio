@@ -1,4 +1,4 @@
- :root {
+:root {
   --bg: #07111f;
   --panel: rgba(12, 23, 40, 0.82);
   --panel-soft: rgba(20, 36, 61, 0.75);
@@ -7,6 +7,7 @@
   --muted: #9eb0cb;
   --accent: #86a8ff;
   --accent-2: #64dfc5;
+  --danger: #ff7d7d;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 * { box-sizing: border-box; }
@@ -23,7 +24,7 @@ body {
 h1, h2, h3, h4, p { margin-top: 0; }
 h1 { font-size: clamp(38px, 5vw, 62px); line-height: 1; margin-bottom: 12px; }
 h2 { font-size: clamp(24px, 3vw, 34px); margin-bottom: 8px; }
-.lead, .section-copy, .muted, li, label, span { color: var(--muted); }
+.lead, .section-copy, .muted, li, label, span, .tiny-note { color: var(--muted); }
 .hero-card, .form-card, .result-card, .angle-card { background: var(--panel-soft); border: 1px solid var(--line); border-radius: 22px; padding: 18px; }
 .hero-pills { display:flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 .pill, .angle-tag { padding: 8px 12px; border-radius: 999px; background: rgba(100,223,197,.1); color: var(--accent-2); border: 1px solid rgba(100,223,197,.22); }
@@ -39,6 +40,13 @@ pre { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, monospac
 .stack-card .mini-toolbar { display:flex; justify-content:flex-end; margin-bottom: 12px; }
 .ranking-list { display:grid; gap: 10px; }
 .ranking-list article { background: rgba(255,255,255,.03); border-radius: 16px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.05); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.provider-chip { margin-top: 16px; padding: 12px 14px; border-radius: 16px; display:grid; gap: 4px; border: 1px solid var(--line); }
+.provider-chip.connected { background: rgba(100,223,197,.09); }
+.provider-chip.disconnected { background: rgba(255,255,255,.03); }
+.api-card ul { margin-bottom: 18px; }
+.api-actions { display:flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.error-text { color: var(--danger); }
+.tiny-note { font-size: 12px; line-height: 1.6; }
 @media (max-width: 900px) {
   .hero-panel, .two-col, .angle-grid { grid-template-columns: 1fr; }
   .section-head { flex-direction: column; align-items: flex-start; }
