@@ -1,58 +1,12 @@
-# Knowledge Studio Refactor Implementation Plan
+# Knowledge Studio Implementation Plan
 
-> **For Hermes:** The next implementation phase should rebuild the app around a real Read → Think → Create workflow, not add more generator sections.
+## Goal
+把 AI 知识生产工具独立为单独 repo，并上线一个可直接使用的 Pages-first MVP。
 
-**Goal:** Turn Knowledge Studio into a research-to-content workspace with Inbox, Reader, Counterview, Projects, Library, and Studio.
-
-**Architecture:** Frontend-only for now, but structured around InputItem, ReadingAnalysis, Project, Draft, and Template objects. AI tasks should be contextual and project-aware.
-
-**Tech Stack:** Vite, ES Modules, Vitest, localStorage, OpenAI-compatible API.
-
----
-
-## Phase 1 — App shell
-- Build workspace navigation:
-  - Dashboard
-  - Inbox
-  - Reader
-  - Projects
-  - Library
-  - Studio
-
-## Phase 2 — Domain objects
-- Add models for:
-  - InputItem
-  - ReadingAnalysis
-  - Project
-  - Draft
-  - Template / Rebuttal Framework
-
-## Phase 3 — Reader first
-- Support:
-  - Summary
-  - Core claims
-  - Alternative angles
-  - Rebuttals
-  - Counter-rebuttals
-  - Open questions
-  - Create project from article
-
-## Phase 4 — Project system
-- Add:
-  - Brief
-  - Sources
-  - Draft versions
-  - Save to library
-
-## Phase 5 — AI task system
-- Split provider calls into task-based APIs:
-  - summary
-  - counterview analysis
-  - project brief
-  - draft generation
-  - rewrite
-
-## Phase 6 — Verify and publish
-- Run tests
-- Rebuild Pages
-- Verify live UI matches new product structure
+## Tasks
+1. 写知识工作包核心逻辑测试
+2. 实现 `knowledge-core.js`
+3. 搭建本地状态存储
+4. 搭建 UI：选题排序 + brief 表单 + 结果区
+5. 补齐 PRD / 技术方案 / 品牌文档
+6. 推 GitHub + 部署 Pages + 验证 live
