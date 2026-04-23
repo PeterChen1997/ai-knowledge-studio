@@ -218,6 +218,9 @@ describe('migrateLegacyState', () => {
     expect(workspace.templates.length).toBeGreaterThan(0);
     expect(workspace.navigation.activeView).toBe('dashboard');
     expect(workspace.aiWorkspace[workspace.projects[0].id].status).toBe('idle');
+    expect(workspace.recentThreads.today.length).toBeGreaterThan(0);
+    expect(workspace.contextPanel.tasks.length).toBeGreaterThan(0);
+    expect(workspace.collaboration.progressPercent).toBeGreaterThan(0);
   });
 });
 

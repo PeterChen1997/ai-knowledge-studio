@@ -14,6 +14,10 @@ const DEFAULT_PROVIDER = {
   chatPath: '/chat/completions',
 };
 
+function createSeedThread(title, time, type = 'thread') {
+  return { id: createId('thread'), title, time, type };
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -242,6 +246,55 @@ export function createEmptyWorkspace() {
     aiWorkspace: {
       [primaryProject.id]: { status: 'idle', content: '', error: '' },
     },
+    recentThreads: {
+      today: [
+        createSeedThread('Q2 市场方案头脑风暴', '10:24', 'project'),
+        createSeedThread('用户调研数据分析', '09:15', 'analysis'),
+        createSeedThread('竞品分析报告撰写', '08:47', 'writing'),
+      ],
+      yesterday: [
+        createSeedThread('产品功能优先级评估', '17:32', 'planning'),
+        createSeedThread('周报内容润色修订', '15:08', 'editing'),
+        createSeedThread('新媒体文案创意生成', '11:21', 'content'),
+      ],
+      earlier: [
+        createSeedThread('行业趋势研究', '上周', 'research'),
+        createSeedThread('定价策略讨论', '上周', 'strategy'),
+        createSeedThread('OKR 制定建议', '更早', 'management'),
+      ],
+    },
+    collaboration: {
+      currentProjectLabel: 'Q2 市场方案',
+      progressPercent: 65,
+      teamMembers: ['林深', '小林', 'Mia'],
+      extraCount: 3,
+    },
+    contextPanel: {
+      filePreview: {
+        title: 'Q2 市场方案基础资料.pdf',
+        type: 'PDF',
+        size: '2.4 MB',
+        updatedAt: '今天 09:58',
+        outline: ['市场分析', '用户洞察', '竞品分析', '渠道策略', '预算分配'],
+      },
+      insights: [
+        { label: '官网访问量', value: '128,560', delta: '+18.7%', tone: 'up' },
+        { label: '注册用户数', value: '9,856', delta: '+22.3%', tone: 'up' },
+        { label: '销售线索', value: '3,254', delta: '+16.1%', tone: 'up' },
+        { label: '转化率', value: '2.53%', delta: '-2.1%', tone: 'down' },
+      ],
+      tasks: [
+        { title: '完善市场分析部分', deadline: '今天截止', tone: 'urgent' },
+        { title: '更新竞品数据', deadline: '明天截止', tone: 'normal' },
+        { title: '准备用户访谈提纲', deadline: '4/18 截止', tone: 'normal' },
+        { title: '设计推广渠道矩阵', deadline: '4/20 截止', tone: 'normal' },
+      ],
+      knowledgeRefs: [
+        { title: '2026 市场趋势白皮书', excerpt: '消费市场呈现个性化、年轻化和数字化三大趋势。', score: '98%' },
+        { title: '竞品研究报告合集', excerpt: '聚合主要竞品打法、投放预算和转化策略。', score: '92%' },
+        { title: '用户调研原始数据', excerpt: '包含 1200 份有效问卷与核心访谈结论。', score: '89%' },
+      ],
+    },
   };
 }
 
@@ -279,6 +332,17 @@ export function migrateLegacyState(state = {}) {
     projects: [project],
     briefs: [brief],
     drafts,
+    collaboration: {
+      ...workspace.collaboration,
+      currentProjectLabel: project.title,
+    },
+    contextPanel: {
+      ...workspace.contextPanel,
+      filePreview: {
+        ...workspace.contextPanel.filePreview,
+        title: `${project.title} 基础资料.pdf`,
+      },
+    },
     settings: {
       provider,
       defaults: {
